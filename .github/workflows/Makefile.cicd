@@ -1,0 +1,52 @@
+# PARAMETERS
+_ALLURE_URL_PREFIX = https://repo.maven.apache.org/maven2/io/qameta/allure/allure-commandline
+ALLURE_VERSION=2.9.0
+
+
+.PHONY: banner
+banner: ##(TITLE=) prints a banner to stdout
+	$(info )
+	$(info )
+	$(info $(_BOLD)$(_YELLOW)$(shell printf "%*s\n" $(_COLS) "" | tr " " "%"))
+	$(info $(_BOLD)$(_BLUE) $(shell date +"%H:%M:%S") | $(TITLE)$(_DEFAULT))
+	$(info $(_BOLD)$(_GREEN) $(shell printf "%*s\n" $(_COLS) "" | tr " " "%"))
+	$(info )
+	$(info )
+	@true
+
+
+.PHONY: install-allure
+install-allure: ##(ALLURE_VERSION=) install allure
+	curl "$(_ALLURE_URL_PREFIX)/${ALLURE_VERSION}/allure-commandline-${ALLURE_VERSION}.tgz" | \
+    	tar --directory=/usr/local/ --extract --ungzip && echo 'export PATH="/usr/local/allure-2.9.0/bin/:$PATH"' >> ~/.bashrc && cat ~/.bashrc
+# cannot sign dollar to a file
+
+
+ .PHONY: brew-allure
+brew-allure: ## install allure with brew long
+	brew install allure
+
+
+ .PHONY: authorise
+authorise: ##(USER= EMAIL=) authorise a github user
+	git config --global user.name $(USER)
+	git config --global user.email $(EMAIL)
+	git pull
+	git status
+
+
+ .PHONY: release
+release:  ## create a new github release
+	gh release create `cat VERSION` -F CHANGELOG.md --target master
+
+
+ .PHONY: tag
+tag: ## pull tags and tag a new version
+	git fetch --prune --unshallow --tags
+	git tag `cat VERSION`
+
+
+ .PHONY: down-volumes
+down-volumes: ## remove docker images and volumes
+	sudo docker-compose down --remove-orphans
+	yes | sudo docker system prune --volumes

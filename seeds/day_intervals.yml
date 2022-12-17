@@ -1,0 +1,35 @@
+version: 2
+
+seeds:
+- name: day_intervals
+  columns:
+  - name: name
+    tests:
+    - not_null
+    - unique
+  - name: start_time
+    tests:
+    - not_null
+  - name: end_time
+    tests:
+    - not_null
+  config:
+    alias: SEED_DAY_INTERVALS
+    column_types:
+      start_time: time
+      end_time: time
+    quote_columns: true
+  description: >
+    Day intervals
+  tests:
+  - dbt_utils.mutually_exclusive_ranges:
+      lower_bound_column: start_time
+      upper_bound_column: end_time
+      gaps: required
+      config:
+        where: "`start_time` < `end_time`"
+  - dbt_expectations.expect_table_row_count_to_be_between:
+      min_value: 0
+      max_value: 1
+      row_condition: "`start_time` > `end_time`"
+

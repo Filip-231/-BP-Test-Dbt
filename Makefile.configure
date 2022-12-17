@@ -1,0 +1,70 @@
+default: help
+SHELL := /bin/bash
+
+-include .env
+-include .github/workflows/Makefile.cicd
+export
+
+BOILERPLATE_REPO_PATH = git@github.com:Filip-231/Boilerplate.git
+BOILERPLATE_REPO_SSH = git@$(DOMAIN):$(BOILERPLATE_REPO_PATH)
+PYTHON ?= python3.9
+_VENV=.venv
+_VENV_ACTIVATE = $(_VENV)/bin/activate
+_CURRENT_DIR_NAME=$(shell cd -P -- '$(shell dirname -- "$0")' && pwd -P)
+
+
+.PHONY: check-commit
+check-commit: venv ## check the commit message is valid
+	. $(_VENV_ACTIVATE) && \
+		cz check --commit-msg-file=./.git/COMMIT_EDITMSG
+
+.PHONY: update
+update: update-project update-makefiles ## update cruft project and configuration files
+
+
+.PHONY: update-project
+update-project: pre-install venv ## update cruft project and install pre-requirements
+	. $(_VENV_ACTIVATE)  && \
+		cruft $(if $(CHECK),check --checkout=$(BRANCH),update --allow-untracked-files --checkout=$(BRANCH))
+# $(_DIR_STRUCTURE)
+
+.PHONY: update-makefiles
+update-makefiles: ## update configuration files
+	@echo "Updating setup files."
+	cd ../ && git clone git@github.com:Filip-231/BP-Init.git tmp && \
+	cd tmp && rm README.md && mv * .gitignore \
+	../$(_PROJECT) && cd ../ && rm -rf tmp/
+
+
+.PHONY: init
+init: pre-install venv ## (LANGUAGE=django/tool/dbt) create cruft project and install pre-requirements
+	$(info Initialising directory from template...)
+	. $(_VENV_ACTIVATE) && cd .. && \
+		cruft create --directory=templates/$(LANGUAGE) --overwrite-if-exists --checkout=$(BRANCH) \
+			--extra-context="{\"project_name\": \"$(_CURRENT_DIR_NAME)\"}" $(BOILERPLATE_REPO_PATH)
+
+
+.PHONY: pre-install
+pre-install: venv ## install pre-requirements
+	. $(_VENV_ACTIVATE) && \
+		pip install $(if $(UPGRADE),--upgrade )commitizen cruft pre-commit pip-tools && \
+			if [ -n "$(SKIP_PRE_COMMIT)" ]; then \
+			echo "SKIP_PRE_COMMIT detected; ignoring pre-commit setup..."; \
+			else \
+				if [ -n "$(UPGRADE)" ]; then \
+				pre-commit autoupdate --config=.pre-commit-config.yml; \
+				fi; \
+				pre-commit install --allow-missing-config --config=.pre-commit-config.yml --hook-type=pre-commit \
+					--hook-type=commit-msg; \
+			fi
+
+
+.PHONY: venv
+venv: $(_VENV_ACTIVATE) ## install virtual environment
+
+
+$(_VENV_ACTIVATE):
+	python3 -m venv --clear "$(_VENV)" && \
+		. $@ && \
+		pip install --upgrade pip
+	touch $@

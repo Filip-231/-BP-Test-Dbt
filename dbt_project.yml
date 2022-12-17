@@ -1,0 +1,106 @@
+config-version: 2
+profile: dev
+
+name: dev
+version: "1.0.0"
+
+analysis-paths:
+- analyses
+asset-paths:
+- assets
+macro-paths:
+- macros
+model-paths:
+- models
+seed-paths:
+- seeds
+snapshot-paths:
+- snapshots
+test-paths:
+- tests
+
+log-path: logs
+packages-install-path: dbt_packages
+target-path: target
+
+clean-targets:
+  - dbt_packages
+  - target
+
+quoting:
+  database: true
+  identifier: true
+  schema: true
+
+models:
+  +pre-hook: >
+    CREATE TABLE IF NOT EXISTS {{ target.schema }}.pipeline_initialization(
+      StructField STRUCT<
+        Id STRING NOT NULL OPTIONS(description='The pipeline ID.'),
+        Name STRING NOT NULL OPTIONS(description='The pipeline name'),
+        Version STRING(14) NOT NULL OPTIONS(description='The pipeline version'),
+        StartDate DATE NOT NULL OPTIONS(description='The start of the date range.'),
+        EndDate DATE NOT NULL OPTIONS(description='The end of the date range.'),
+        CurrentDateTime DATETIME NOT NULL OPTIONS(description='The time when initialization happen.'),
+        Event STRUCT<
+          Name STRING NOT NULL OPTIONS(description='The name of the event.'),
+          Description STRING OPTIONS(description='A description of a event.'),
+          StartDateTime DATETIME NOT NULL,
+          EndDateTime DATETIME,
+          Status STRING NOT NULL OPTIONS(description='The status of the event.'),
+          Traceback STRING OPTIONS(description='Message to user.')
+        > NOT NULL,
+        Details JSON OPTIONS(description='Details in JSON format.')
+      > NOT NULL,
+      timestamp TIMESTAMP
+    );
+    CREATE TABLE IF NOT EXISTS {{ target.schema }}.pipeline_execution(
+      StructField STRUCT<
+        Id STRING NOT NULL OPTIONS(description="The pipeline ID."),
+        Name STRING NOT NULL OPTIONS(description="The pipeline name"),
+        CurrentDateTime DATETIME NOT NULL OPTIONS(description="The time when execution happen."),
+        EndDate DATE NOT NULL OPTIONS(description="The end of the date range."),
+        Event STRUCT<
+          Name STRING NOT NULL OPTIONS(description="The name of the event."),
+          Description STRING OPTIONS(description="A description of a event."),
+          StartDateTime DATETIME NOT NULL,
+          EndDateTime DATETIME,
+          Status STRING NOT NULL OPTIONS(description="Event Status"),
+          Traceback STRING OPTIONS(description="Message to user.")
+        > NOT NULL,
+        Details JSON OPTIONS(description="Details in JSON format.")
+      > NOT NULL,
+      timestamp TIMESTAMP
+    )
+
+  +enabled: true
+  +persist_docs:
+    columns: true
+    relation: true
+
+  prod:
+    intermediate:
+#      +schema: INTERMEDIATE
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table
+
+seeds:
+  +enabled: true
+
+sources:
+  +enabled: true
+
+tests:
+  +enabled: true
+  +store_failures: false
+
+vars:
+  default_string_value: DEFAULT
+  loaded_at_field: UpdatedAt
+  id_regex: ^.*\(ID_NUMBER:-(\d+)\).*$
+  tomorrow: DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)
+  yesterday: DATE_ADD(CURRENT_DATE(), INTERVAL -1 DAY)
+  infinity_future: DATE("9999-12-31")
+  infinity_past: DATE("1970-01-01")

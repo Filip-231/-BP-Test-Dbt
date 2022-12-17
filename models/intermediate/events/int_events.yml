@@ -1,0 +1,12 @@
+version: 2
+
+models:
+- name: int_events
+  config:
+    meta:
+      owner: example@gmail.com
+    tags:
+    - events
+  description: >
+    Transformations performed in this model:
+      *

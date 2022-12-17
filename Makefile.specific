@@ -1,0 +1,119 @@
+# DIRECTIVES
+SHELL := /bin/bash
+
+# PARAMETERS
+BROWSE ?=
+CI_COMMIT_SHA ?=
+DBT_CLOUD_ACCOUNT_ID ?=
+DBT_CLOUD_JOB_ID ?=
+DBT_CLOUD_TOKEN ?=
+DBT_TARGET ?= dev
+DIFF ?=
+
+
+# CONSTANTS
+LANGUAGE = dbt
+_CHANGED_FILES = $(shell git diff --name-only --merge-base origin/master -- models)
+_DBT_POST_URL = https://cloud.getdbt.com/api/v2/accounts
+_VERSION_FILE = VERSION
+
+
+# DERIVED
+# sort is used to remove duplicates:
+_CHANGED_MODELS = $(sort $(foreach model, $(notdir $(_CHANGED_FILES)),+$(basename $(model))))
+_CHANGED_SQL_FILES = $(filter %.sql,$(_CHANGED_FILES))
+
+
+# RULES
+.PHONY: build
+build:: ## create a build artifact locally
+	mkdir -p dist
+	tar --exclude="dbt_packages" --exclude="dist" --exclude="logs" --exclude="target" --exclude="Makefile*" \
+		-czvf dist/$(_PROJECT)-$(shell cat $(_VERSION_FILE)).tar.gz *
+
+
+
+.PHONY: deploy-dbt
+deploy-dbt:: ## (DBT_TARGET=dev DIFF= ) deploys dbt
+	$(if $(DIFF), \
+		$(if $(_CHANGED_MODELS), \
+			. "$(_VENV_ACTIVATE)" && \
+				dbt run --target $(DBT_TARGET) --select $(_CHANGED_MODELS), \
+			@echo "No changed models detected. Nothing to run." \
+		), \
+		. "$(_VENV_ACTIVATE)" && \
+			dbt run --target $(DBT_TARGET) \
+	)
+
+
+.PHONY: docker-run-package
+docker-run-package: ## (VERSION= ) run package downloaded from GH package registry
+	@echo ghcr.io/$(_USER)/$(_PROJECT):`(cat VERSION)`
+	docker create --name "$(SERVICE_NAME)-tmp" $(if $(VERSION), "$(GH_PACKAGE)$(VERSION)", "$(GH_PACKAGE)latest" ) && \
+	docker cp credentials.json "$(SERVICE_NAME)-tmp":/dbt/credentials.json && \
+	docker commit "$(SERVICE_NAME)-tmp" "$(SERVICE_NAME)-credentials" && \
+	docker run "$(SERVICE_NAME)-credentials"
+
+
+.PHONY: docker-exec
+docker-exec: ## exec in a docker container
+	docker run --interactive --tty --entrypoint /bin/sh "$(SERVICE_NAME)-credentials"
+
+
+.PHONY: install
+install:: pre-install ## install the requirements
+	$(info Installing requirements.)
+	. "$(_VENV_ACTIVATE)" && \
+		pip install -r requirements.txt && \
+		dbt deps
+
+
+.PHONY: test
+test:: ## (DIFF= ) run unit tests
+	$(if $(DIFF), \
+		$(if $(_CHANGED_MODELS), \
+			. "$(_VENV_ACTIVATE)" && \
+				dbt test --select $(_CHANGED_MODELS), \
+			@echo "No changed models detected. Nothing to run." \
+		), \
+		. "$(_VENV_ACTIVATE)" && \
+			dbt test \
+	)
+
+
+.PHONY: lint
+lint:: ## (DIFF= ) run code linting tools
+	$(if $(DIFF), \
+		$(if $(_CHANGED_SQL_FILES), \
+			. "$(_VENV_ACTIVATE)" && \
+				sqlfluff lint $(_CHANGED_SQL_FILES), \
+			@echo "No changed SQL files detected. Nothing to run." \
+		), \
+		. "$(_VENV_ACTIVATE)" && \
+			sqlfluff lint models \
+	)
+
+
+.PHONY: format
+format:: ## run code formatting tools
+	. "$(_VENV_ACTIVATE)" && \
+		sqlfluff fix models
+
+
+.PHONY: docs
+docs:: ## (BROWSE= ) build code documentation
+	$(info Generating docs.)
+	. "$(_VENV_ACTIVATE)" && \
+		dbt source freshness; \
+		dbt docs generate
+	if [ "$(BROWSE)" ]; then \
+	dbt docs serve; \
+	fi
+
+
+.PHONY: clean
+clean:: ## clean up temp and local build files
+	echo "Cleaning environment."
+	. "$(_VENV_ACTIVATE)" && \
+		dbt clean && \
+		rm -rf dist

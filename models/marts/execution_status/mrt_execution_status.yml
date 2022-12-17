@@ -1,0 +1,12 @@
+version: 2
+
+models:
+- name: mrt_execution_status
+  config:
+    meta:
+      owner: example@gmail.com
+    tags:
+    - executions
+  description: >
+    Transformations performed in this model:
+      *

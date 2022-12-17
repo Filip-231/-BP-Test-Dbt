@@ -1,0 +1,23 @@
+config:
+  send_anonymos_usage_stats: false
+  use_colors: true
+
+dev:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: service-account
+      keyfile: credentials.json
+      project: mlg-sandbox-20220413-k0tg63
+      dataset: DBT_DEV
+      threads: 4
+      location: EU
+    prod:
+      type: bigquery
+      method: service-account
+      keyfile: credentials.json
+      project: mlg-sandbox-20220413-k0tg63
+      dataset: DBT_PROD
+      threads: 4
+      location: EU

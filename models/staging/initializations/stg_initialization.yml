@@ -1,0 +1,64 @@
+version: 2
+
+models:
+- name: stg_initialization
+  config:
+    meta:
+      owner: example@gmail.com
+    tags:
+    - executions
+  description: >
+    Transformations performed in this model:
+      *
+
+sources:
+- name: DBT
+  schema: >
+    {{ target.schema }}
+  tables:
+  - name: pipeline_initialization
+    description: The initialization pipeline.
+    freshness:
+      error_after:
+        count: 20
+        period: day
+      warn_after:
+        count: 10
+        period: day
+    columns:
+    - name: structField.Id
+      tests:
+      - not_null
+      - unique
+    - name: StructField.Name
+      tests:
+      - not_null
+    - name: StructField.Version
+      tests:
+      - not_null
+    - name: StructField.StartDate
+      tests:
+      - not_null
+    - name: StructField.EndDate
+      tests:
+      - not_null
+    - name: StructField.CurrentDateTime
+      tests:
+      - not_null
+    - name: StructField.Event
+      tests:
+      - not_null
+    - name: StructField.Event.Name
+      tests:
+      - not_null
+    - name: StructField.Event.StartDateTime
+      tests:
+      - not_null
+    - name: StructField.Event.EndDateTime
+      tests:
+      - not_null
+    - name: StructField.Event.Status
+      tests:
+      - not_null
+    tags:
+    - logs

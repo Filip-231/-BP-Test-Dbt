@@ -1,0 +1,19 @@
+{
+  "template": "git@github.com:Filip-231/Boilerplate.git",
+  "commit": "0ffea689d5660c3ad2db78938f3d8b6132ce65f5",
+  "checkout": "master",
+  "context": {
+    "cookiecutter": {
+      "_copy_without_render": [
+        "dags",
+        ".github/workflows"
+      ],
+      "repo_name": "BP-Test-Dbt",
+      "author_name": "Filip",
+      "email": "Your Email",
+      "description": "A short description of the package",
+      "_template": "git@github.com:Filip-231/Boilerplate.git"
+    }
+  },
+  "directory": "templates/dbt"
+}

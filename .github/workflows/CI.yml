@@ -1,0 +1,84 @@
+name: CI-Integrate
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  push:
+    branches: [ "master" ]
+  pull_request:
+    branches: [ "master" ]
+
+env:
+  _PROJECT: ${{ github.event.repository.name }}
+  _USER: ${{ github.actor }}
+  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+jobs:
+  test:
+    name: Tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Setup profiles
+        run: |
+          make banner TITLE="Creating profiles - started"
+          touch credentials.json && echo '${{ secrets.CREDENTIALS_JSON }}' >> credentials.json
+          make banner TITLE="Creating profiles - success"
+
+      - name: Install
+        run: make install
+
+      - name: Test
+        run: make test
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup profiles
+      run: |
+        make banner TITLE="Creating profiles - started"
+        touch credentials.json && echo '${{ secrets.CREDENTIALS_JSON }}' >> credentials.json
+        make banner TITLE="Creating profiles - success"
+
+    - name: Install
+      run: make install
+
+    - name: Lint
+      run: make lint
+
+  format:
+    name: Format
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Setup profiles
+      run: |
+        make banner TITLE="Creating profiles - started"
+        touch credentials.json && echo '${{ secrets.CREDENTIALS_JSON }}' >> credentials.json
+        make banner TITLE="Creating profiles - success"
+
+    - name: Install
+      run: make install
+
+    - name: Format
+      run: make format
+
+  docker:
+    name: Docker
+    runs-on: ubuntu-latest
+    needs: [test, lint, format]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup profiles
+        run: |
+          make banner TITLE="Creating profiles - started"
+          touch credentials.json && echo '${{ secrets.CREDENTIALS_JSON }}' >> credentials.json
+          make banner TITLE="Creating profiles - success"
+      - name:  Build
+        run: docker build -t bp-dbt-test  .
+
+      - name: Run
+        run: docker run bp-dbt-test:latest
+

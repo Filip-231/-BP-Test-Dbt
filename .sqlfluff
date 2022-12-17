@@ -1,0 +1,29 @@
+[sqlfluff]
+dialect = bigquery
+encoding = utf-8
+exclude_rules = L025,L051
+processes = 0
+templater = dbt
+
+[sqlfluff:indentation]
+indented_on_contents = False
+
+[sqlfluff:templater:dbt]
+profile = dev
+
+[sqlfluff:rules]
+max_line_length = 120
+single_table_references = unqualified
+tab_space_size = 2
+
+[sqlfluff:rules:L010]
+capitalisation_policy = upper
+
+[sqlfluff:rules:L042]
+forbid_subquery_in = both
+
+[sqlfluff:rules:L059]
+prefer_quoted_identifiers = True
+
+[sqlfluff:rules:L064]
+preferred_quoted_literal_style = double_quotes

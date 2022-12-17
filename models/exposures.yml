@@ -1,0 +1,16 @@
+version: 2
+
+exposures:
+- name: Monitoring
+  depends_on:
+  - ref("mrt_status_view")
+  description: >
+    This is important dashboard depending on overall status view.
+
+  owner:
+    name: Filip
+    email: example@gmail.com
+  tags:
+  - ml
+  type: dashboard
+  url: https://www.example.com

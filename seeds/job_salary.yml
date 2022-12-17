@@ -1,0 +1,19 @@
+version: 2
+
+seeds:
+- name: job_salary
+  columns:
+  - name: job_title
+    tests:
+    - not_null
+    - unique
+  - name: salary
+    tests:
+    - not_null
+  config:
+    alias: JOB_SALARY
+    quote_columns: true
+  description: >
+    A maximum job salaries
+  tags:
+    -job salary
