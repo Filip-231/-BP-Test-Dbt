@@ -45,7 +45,7 @@ dev:
     prod:
       type: bigquery
       method: oauth
-      project: sandbox
+      project: sandboxx
       dataset: DBT_PROD
       threads: 4
       location: EU
