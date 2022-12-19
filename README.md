@@ -38,14 +38,14 @@ dev:
     dev:
       type: bigquery
       method: oauth
-      project: mlg-sandbox-20220413-k0tg63
+      project: sandbox
       dataset: DBT_DEV
       threads: 4
       location: EU
     prod:
       type: bigquery
       method: oauth
-      project: mlg-sandbox-20220413-k0tg63
+      project: sandbox
       dataset: DBT_PROD
       threads: 4
       location: EU

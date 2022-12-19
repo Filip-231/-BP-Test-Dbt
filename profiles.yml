@@ -9,7 +9,7 @@ dev:
       type: bigquery
       method: service-account
       keyfile: credentials.json
-      project: mlg-sandbox-20220413-k0tg63
+      project: sandbox
       dataset: DBT_DEV
       threads: 4
       location: EU
@@ -17,7 +17,7 @@ dev:
       type: bigquery
       method: service-account
       keyfile: credentials.json
-      project: mlg-sandbox-20220413-k0tg63
+      project: sandbox
       dataset: DBT_PROD
       threads: 4
       location: EU
