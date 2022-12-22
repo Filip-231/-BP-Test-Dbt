@@ -137,5 +137,3 @@ The model graph will look like this:
 ![graph.png](dags/graph.png)
 
 ![tree.png](dags/tree.png)
-
-[//]: # (#abc)
